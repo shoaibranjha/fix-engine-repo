@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIX Trading Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/market-data.css">
+    <link rel="stylesheet" href="css/order-entry.css">
+    <link rel="stylesheet" href="css/positions.css">
+    <link rel="stylesheet" href="css/reports.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <h1>FIX Trading Platform</h1>
+            </div>
+            <div class="connection-status">
+                <span id="connection-indicator" class="indicator disconnected"></span>
+                <span id="connection-text">Disconnected</span>
+            </div>
+            <div class="user-info">
+                <span id="username">User</span>
+                <button id="settings-btn" class="icon-button">⚙️</button>
+            </div>
+        </header>
+
+        <!-- Main Navigation -->
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#" data-view="dashboard" class="active">Dashboard</a></li>
+                <li><a href="#" data-view="market-data">Market Data</a></li>
+                <li><a href="#" data-view="order-entry">Order Entry</a></li>
+                <li><a href="#" data-view="order-book">Order Book</a></li>
+                <li><a href="#" data-view="positions">Positions</a></li>
+                <li><a href="#" data-view="reports">Reports</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="view active">
+                <div class="dashboard-grid">
+                    <!-- Market Overview -->
+                    <div class="dashboard-card market-overview">
+                        <h2>Market Overview</h2>
+                        <div class="market-summary" id="market-summary">
+                            <div class="loading">Loading market data...</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Orders -->
+                    <div class="dashboard-card recent-orders">
+                        <h2>Recent Orders</h2>
+                        <div class="order-list" id="recent-orders">
+                            <div class="loading">Loading orders...</div>
+                        </div>
+                    </div>
+
+                    <!-- Positions Summary -->
+                    <div class="dashboard-card positions-summary">
+                        <h2>Positions Summary</h2>
+                        <div class="position-list" id="positions-summary">
+                            <div class="loading">Loading positions...</div>
+                        </div>
+                    </div>
+
+                    <!-- P&L Chart -->
+                    <div class="dashboard-card pnl-chart">
+                        <h2>P&L Overview</h2>
+                        <div class="chart-container">
+                            <canvas id="pnl-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Market Data View -->
+            <section id="market-data-view" class="view">
+                <div class="market-data-container">
+                    <div class="market-data-controls">
+                        <div class="symbol-search">
+                            <input type="text" id="symbol-search" placeholder="Enter symbol...">
+                            <button id="subscribe-btn">Subscribe</button>
+                        </div>
+                        <div class="view-options">
+                            <button id="grid-view-btn" class="active">Grid</button>
+                            <button id="chart-view-btn">Chart</button>
+                        </div>
+                    </div>
+
+                    <div class="market-data-grid active" id="market-data-grid">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Bid</th>
+                                    <th>Ask</th>
+                                    <th>Last</th>
+                                    <th>Change</th>
+                                    <th>Volume</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="market-data-table-body">
+                                <!-- Market data rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="market-data-chart" id="market-data-chart">
+                        <div class="chart-selector">
+                            <select id="chart-symbol-selector">
+                                <option value="">Select Symbol</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="price-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Order Entry View -->
+            <section id="order-entry-view" class="view">
+                <div class="order-entry-container">
+                    <div class="order-form-container">
+                        <h2>New Order</h2>
+                        <form id="order-form">
+                            <div class="form-group">
+                                <label for="order-symbol">Symbol:</label>
+                                <input type="text" id="order-symbol" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Side:</label>
+                                <div class="side-buttons">
+                                    <button type="button" id="buy-btn" class="side-btn buy active" data-side="1">Buy</button>
+                                    <button type="button" id="sell-btn" class="side-btn sell" data-side="2">Sell</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="order-quantity">Quantity:</label>
+                                <input type="number" id="order-quantity" min="1" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Order Type:</label>
+                                <div class="order-type-buttons">
+                                    <button type="button" id="market-btn" class="order-type-btn active" data-order-type="1">Market</button>
+                                    <button type="button" id="limit-btn" class="order-type-btn" data-order-type="2">Limit</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" id="price-group" style="display: none;">
+                                <label for="order-price">Price:</label>
+                                <input type="number" id="order-price" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="order-tif">Time In Force:</label>
+                                <select id="order-tif">
+                                    <option value="0">Day</option>
+                                    <option value="1">GTC</option>
+                                    <option value="3">IOC</option>
+                                    <option value="4">FOK</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" id="submit-order-btn">Submit Order</button>
+                                <button type="reset" id="reset-order-btn">Reset</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="market-data-sidebar">
+                        <h2>Market Data</h2>
+                        <div class="symbol-info" id="order-symbol-info">
+                            <div class="loading">Select a symbol</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Order Book View -->
+            <section id="order-book-view" class="view">
+                <div class="order-book-container">
+                    <div class="order-book-header">
+                        <h2>Order Book</h2>
+                        <div class="order-book-filters">
+                            <select id="order-status-filter">
+                                <option value="all">All Orders</option>
+                                <option value="PENDING_NEW">Pending</option>
+                                <option value="NEW">New</option>
+                                <option value="PARTIALLY_FILLED">Partially Filled</option>
+                                <option value="FILLED">Filled</option>
+                                <option value="CANCELED">Canceled</option>
+                                <option value="REJECTED">Rejected</option>
+                            </select>
+                            <input type="text" id="order-symbol-filter" placeholder="Filter by symbol...">
+                            <button id="refresh-orders-btn">Refresh</button>
+                        </div>
+                    </div>
+                    
+                    <div class="order-book-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Symbol</th>
+                                    <th>Side</th>
+                                    <th>Type</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Filled</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="order-book-table-body">
+                                <!-- Order rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="order-details" id="order-details">
+                        <h3>Order Details</h3>
+                        <div class="order-details-content">
+                            <p>Select an order to view details</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Positions View -->
+            <section id="positions-view" class="view">
+                <div class="positions-container">
+                    <div class="positions-header">
+                        <h2>Positions</h2>
+                        <div class="positions-summary-bar" id="positions-summary-bar">
+                            <div class="summary-item">
+                                <span class="label">Total P&L:</span>
+                                <span class="value" id="total-pnl">$0.00</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Realized P&L:</span>
+                                <span class="value" id="realized-pnl">$0.00</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Unrealized P&L:</span>
+                                <span class="value" id="unrealized-pnl">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="positions-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Quantity</th>
+                                    <th>Avg Price</th>
+                                    <th>Market Price</th>
+                                    <th>Realized P&L</th>
+                                    <th>Unrealized P&L</th>
+                                    <th>Total P&L</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="positions-table-body">
+                                <!-- Position rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="position-details" id="position-details">
+                        <h3>Position Details</h3>
+                        <div class="position-details-content">
+                            <p>Select a position to view details</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports View -->
+            <section id="reports-view" class="view">
+                <div class="reports-container">
+                    <div class="reports-sidebar">
+                        <h2>Report Types</h2>
+                        <ul class="report-types">
+                            <li><a href="#" data-report="trade" class="active">Trade Report</a></li>
+                            <li><a href="#" data-report="position">Position Report</a></li>
+                            <li><a href="#" data-report="pnl">P&L Report</a></li>
+                            <li><a href="#" data-report="execution">Execution Report</a></li>
+                            <li><a href="#" data-report="order">Order Report</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="report-content">
+                        <div class="report-header">
+                            <h2 id="report-title">Trade Report</h2>
+                            <div class="report-actions">
+                                <button id="generate-report-btn">Generate Report</button>
+                                <button id="export-report-btn">Export CSV</button>
+                            </div>
+                        </div>
+                        
+                        <div class="report-filters" id="report-filters">
+                            <div class="filter-group">
+                                <label for="report-start-date">Start Date:</label>
+                                <input type="date" id="report-start-date">
+                            </div>
+                            <div class="filter-group">
+                                <label for="report-end-date">End Date:</label>
+                                <input type="date" id="report-end-date">
+                            </div>
+                            <div class="filter-group">
+                                <label for="report-symbol">Symbol:</label>
+                                <input type="text" id="report-symbol">
+                            </div>
+                            <div class="filter-group" id="status-filter-group" style="display: none;">
+                                <label for="report-status">Status:</label>
+                                <select id="report-status">
+                                    <option value="">All</option>
+                                    <option value="NEW">New</option>
+                                    <option value="PARTIALLY_FILLED">Partially Filled</option>
+                                    <option value="FILLED">Filled</option>
+                                    <option value="CANCELED">Canceled</option>
+                                    <option value="REJECTED">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="report-results" id="report-results">
+                            <p>Generate a report to view results</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Status Bar -->
+        <footer class="status-bar">
+            <div class="status-message" id="status-message">Ready</div>
+            <div class="status-info">
+                <span id="server-time"></span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal Templates -->
+    <div class="modal" id="connection-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Connect to FIX Server</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="connection-form">
+                    <div class="form-group">
+                        <label for="fix-host">Host:</label>
+                        <input type="text" id="fix-host" value="127.0.0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fix-port">Port:</label>
+                        <input type="number" id="fix-port" value="5001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fix-sender-comp-id">Sender Comp ID:</label>
+                        <input type="text" id="fix-sender-comp-id" value="CLIENT1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fix-target-comp-id">Target Comp ID:</label>
+                        <input type="text" id="fix-target-comp-id" value="EXECUTOR" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fix-version">FIX Version:</label>
+                        <select id="fix-version">
+                            <option value="FIX.4.2">FIX.4.2</option>
+                            <option value="FIX.4.4" selected>FIX.4.4</option>
+                            <option value="FIX.5.0">FIX.5.0</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="fix-heartbeat">Heartbeat Interval (seconds):</label>
+                        <input type="number" id="fix-heartbeat" value="30" min="5" required>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" id="use-mock-data" checked>
+                            Use mock data when disconnected
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="connect-btn">Connect</button>
+                <button id="cancel-connect-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="settings-form">
+                    <div class="form-tabs">
+                        <button type="button" class="tab-btn active" data-tab="general">General</button>
+                        <button type="button" class="tab-btn" data-tab="appearance">Appearance</button>
+                        <button type="button" class="tab-btn" data-tab="trading">Trading</button>
+                    </div>
+                    
+                    <div class="tab-content active" id="general-tab">
+                        <div class="form-group">
+                            <label for="username">Username:</label>
+                            <input type="text" id="settings-username" value="User">
+                        </div>
+                        <div class="form-group">
+                            <label for="refresh-interval">Data Refresh Interval (ms):</label>
+                            <input type="number" id="refresh-interval" value="1000" min="500">
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label>
+                                <input type="checkbox" id="auto-connect" checked>
+                                Auto-connect on startup
+                            </label>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label>
+                                <input type="checkbox" id="show-notifications" checked>
+                                Show desktop notifications
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="appearance-tab">
+                        <div class="form-group">
+                            <label for="theme">Theme:</label>
+                            <select id="theme">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                                <option value="system">System Default</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="font-size">Font Size:</label>
+                            <select id="font-size">
+                                <option value="small">Small</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label>
+                                <input type="checkbox" id="compact-tables" checked>
+                                Use compact tables
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="trading-tab">
+                        <div class="form-group">
+                            <label for="default-quantity">Default Order Quantity:</label>
+                            <input type="number" id="default-quantity" value="100" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="default-tif">Default Time In Force:</label>
+                            <select id="default-tif">
+                                <option value="0" selected>Day</option>
+                                <option value="1">GTC</option>
+                                <option value="3">IOC</option>
+                                <option value="4">FOK</option>
+                            </select>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label>
+                                <input type="checkbox" id="confirm-orders" checked>
+                                Confirm order submission
+                            </label>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label>
+                                <input type="checkbox" id="confirm-cancels" checked>
+                                Confirm order cancellation
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings-btn">Save</button>
+                <button id="cancel-settings-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="order-confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Confirm Order</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="order-confirm-details">
+                    <!-- Order details will be inserted here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-order-btn">Confirm</button>
+                <button id="cancel-order-confirm-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/chart.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/market-data.js"></script>
+    <script src="js/order-entry.js"></script>
+    <script src="js/order-book.js"></script>
+    <script src="js/positions.js"></script>
+    <script src="js/reports.js"></script>
+</body>
+</html>
